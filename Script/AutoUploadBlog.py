@@ -57,6 +57,7 @@ class AutoUploadBlog:
             if name not in used_imgs:
                 del_count += 1
                 os.remove(ap)
+                print('del: ', ap)
         
         # 有新增
         if img_count > len(used_imgs):
@@ -88,44 +89,30 @@ class AutoUploadBlog:
             msg = "update {0} imgs".format(count)
             print(msg)
 
-            os.chdir("{0}\\{1}\\Imgur".format(self.__BLOG_DIR, self.__RESOURCE_DIR))
-            self.git_push(msg)
+            # os.chdir("{0}\\{1}\\Imgur".format(self.__BLOG_DIR, self.__RESOURCE_DIR))
+            # self.git_push(msg)
 
-        os.chdir(self.__BLOG_DIR)
-        self.git_push()
+        # os.chdir(self.__BLOG_DIR)
+        # self.git_push()
     
 
     def update_resource(self):
-        def __clean_folder(folder_path):
-            if os.path.exists(folder_path) and os.path.isdir(folder_path):
-                for name in os.listdir(folder_path):
-                    path = os.path.join(folder_path, name)
-                    if os.path.isfile(path):
-                        os.remove(path)
-                    elif os.path.isdir(path):
-                        shutil.rmtree(path)
-                print(f"{folder_path} already clean")
-
-        def __copy_folder(source_dir, target_dir):
-            def __ignore_dirs(dir, files):
-                # 指定要排除的目录名称
-                exclude_dirs = {".git"}
-                # 如果当前目录在排除列表中，忽略所有文件和文件夹
-                if os.path.basename(dir) in exclude_dirs:
-                    return files
-                # 否则，不忽略任何文件
-                return []
-
-            if os.path.exists(source_dir) and os.path.isdir(source_dir):
-                shutil.copytree(source_dir, target_dir, dirs_exist_ok=True, ignore=__ignore_dirs)
-                print(f"{source_dir} already copy {target_dir}")
-
         SOURRC_DIR = "{0}\\_posts\\{1}\\Imgur".format(self.__JEYLL_DIR, self.__RESOURCE_DIR)
         TARGET_DIR = "{0}\\{1}\\Imgur".format(self.__JEYLL_DIR, self.__RESOURCE_DIR)
 
-        __clean_folder(TARGET_DIR)
-        __copy_folder(SOURRC_DIR, TARGET_DIR)
+        def copy_with_ignore_git(src_dir, dst_dir):
+            # 检查目标目录是否存在，如果存在则先删除它
+            if os.path.exists(dst_dir):
+                shutil.rmtree(dst_dir)
 
+            # 定义忽略函数，忽略 ".git" 文件夹
+            def ignore_git(dir, files):
+                return [".git"] if ".git" in files else []
+
+            # 复制目录，并忽略 ".git" 文件夹
+            shutil.copytree(src_dir, dst_dir, ignore=ignore_git, dirs_exist_ok=True)
+
+        copy_with_ignore_git(SOURRC_DIR, TARGET_DIR)
 
     def upload_jekyll(self):
         # os.chdir("{0}\\_posts".format(self.__JEYLL_DIR))
@@ -139,5 +126,5 @@ class AutoUploadBlog:
 
 if __name__ == "__main__":
     auto = AutoUploadBlog()
-    # auto.upload_blog()
-    auto.upload_jekyll()
+    auto.upload_blog()
+    #auto.upload_jekyll()
